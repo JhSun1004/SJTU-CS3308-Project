@@ -45,3 +45,7 @@ class AIGTrain():
             out = self.model(data)
             loss += self.loss(out, data.y)
         return loss
+
+if __name__ == '__main__':
+    aig = AIGTrain()
+    aig.train()
