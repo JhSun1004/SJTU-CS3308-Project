@@ -11,7 +11,8 @@ class AIGTrain():
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01, weight_decay=5e-4)
         self.loss = torch.nn.MSELoss()
         self.batch_size = 32
-        self.trainset, self.testset = get_dataset()
+        self.trainset = torch.load('train_set.pt')
+        self.testset = torch.load('test_set.pt')
     
     def train(self):
         trainloader = torch.utils.data.DataLoader(self.trainset, batch_size=self.batch_size, shuffle=True)
