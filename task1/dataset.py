@@ -4,8 +4,8 @@ import os.path as osp
 import abc_py
 import numpy as np
 import torch
-from torch_geometric.data import Data
-from sklearn.model_selection import train_test_split
+from tqdm import *
+
 
 train_circuit = ['adder', 'alu2', 'apex3', 'apex5', 'arbiter', 'b2', 'c1355', 'c2670', 'c5315',
                  'c6288', 'ctrl', 'frg1', 'i7', 'i8', 'int2float', 'log2', 'm3', 'max', 'max512', 
@@ -17,7 +17,6 @@ def get_data(state):
     _abc.read(state)
     data = {}
     numNodes = _abc.numNodes()
-    print(numNodes)
     data['node_type'] = np.zeros(numNodes, dtype = int)
     data['num_inverted_predecessors'] = np.zeros(numNodes, dtype=int)
     edge_src_index = []
@@ -57,8 +56,8 @@ def generate_aig(state, is_train = True):
     else:
         circuitPath = './InitialAIG/test/' + circuitName + '.aig'
     libFile = './lib/7nm/7nm.lib'
-    logFile = './log/' + state + '.log'
-    nextState = './aig/' + state + '.aig' # current AIG file
+    logFile = './log/' + circuitName + '.log'
+    nextState = './aig/' + circuitName + '.aig' # current AIG file
     synthesisOpToPosDic = {
         0: "refactor",
         1: "refactor -z",
@@ -78,8 +77,11 @@ def get_dataset():
     train_set = []
     test_set = []
     data_folder = "./project_data"
-    for file in os.listdir(data_folder):
-        if file.endswith(".pkl"):
+    for file in tqdm(os.listdir(data_folder)):
+        num = file.split('_')[1]
+        num = num.split('.')[0]
+        num = int(num)
+        if file.endswith(".pkl") and num <= 200:
             with open(osp.join(data_folder, file), "rb") as f:
                 input_target = pickle.load(f)
                 states = input_target['input']
@@ -88,17 +90,15 @@ def get_dataset():
                     circuit = state.split('_')[0]
                     if circuit in train_circuit:
                         generate_aig(state)
-                        data = get_data('aig/' + state + '.aig')
-                        node_features = torch.cat([data['node_type'], data['num_inverted_predecessors']], axis=1)
-                        new_data = Data(x=node_features, edge_index=data['edge_index'], y=target)
-                        train_set.append(new_data)
+                        data = get_data('aig/' + circuit + '.aig')
+                        data['y'] = target
+                        train_set.append(data)
                     else:
                         generate_aig(state, False)
-                        data = get_data('aig/' + state + '.aig')
-                        node_features = torch.cat([data['node_type'], data['num_inverted_predecessors']], axis=1)
-                        new_data = Data(x=node_features, edge_index=data['edge_index'], y=target)
-                        test_set.append(new_data)
-    return train_set, test_set
-
+                        data = get_data('aig/' + circuit + '.aig')
+                        data['y'] = target
+                        test_set.append(data)
+    torch.save(train_set, 'train_set.pt')
+    torch.save(test_set, 'test_set.pt')
 if __name__ == "__main__":
     get_dataset()
