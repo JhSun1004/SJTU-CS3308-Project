@@ -3,6 +3,7 @@ import torch
 from dataset import *
 from matplotlib import pyplot as plt
 import tqdm
+from torch_geometric.data import Data
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MODEL_PATH = './model/'
 class AIGTrain():
@@ -20,6 +21,7 @@ class AIGTrain():
         loss = int('inf')
         for i in tqdm(range(100)):
             for data in trainloader:
+                data = Data(x = torch.cat([data['node_type'], data['num_inverted_predecessors']], dim=1), edge_index = data['edge_index'], y = data['y'])
                 data = data.to(device)
                 self.optimizer.zero_grad()
                 out = self.model(data)
@@ -42,11 +44,13 @@ class AIGTrain():
         # plt.savefig('./graph/prediction.png')
         loss = 0
         for data in testloader:
+            data = Data(x = torch.cat([data['node_type'], data['num_inverted_predecessors']], dim=1), edge_index = data['edge_index'], y = data['y'])
             data = data.to(device)
             out = self.model(data)
             loss += self.loss(out, data.y)
         return loss
-
+    
 if __name__ == '__main__':
     aig = AIGTrain()
     aig.train()
+    
