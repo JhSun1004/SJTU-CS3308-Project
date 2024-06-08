@@ -12,9 +12,9 @@ class GCN(torch.nn.Module):
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         x = self.conv1(x, edge_index)
-        x = F.relu(x)
+        x = F.tanh(x)
         x = self.conv2(x, edge_index)
-        x = F.relu(x)
+        x = F.tanh(x)
         # 2. Readout layer
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
         # 3. Apply a final classifier
