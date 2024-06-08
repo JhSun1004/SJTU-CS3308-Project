@@ -1,7 +1,6 @@
 import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, global_mean_pool
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
 class GCN(torch.nn.Module):
     def __init__(self):
