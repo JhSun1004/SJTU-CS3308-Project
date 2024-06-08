@@ -1,4 +1,4 @@
-from myGCN import GCN
+from GCN import GCN
 import torch
 import numpy as np
 from tqdm import *
